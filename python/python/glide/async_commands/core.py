@@ -506,13 +506,10 @@ class CoreCommands(Protocol):
         args: List[TEncodable] = [key]
         ret = await self._execute_command(RequestType.Get, args)
 
-        if ret == None:
-            return None
         if ret_as_byte:
             return cast(Optional[bytes], ret)
         else:
-            return cast(Optional[str], str(ret))[2:-1]
-        # takes an average of .05 extra milliseconds to get a string than to get a byte and decode it
+            return None if (r := cast(Optional[str], str(ret))) == "None" else r[2:-1]
 
     async def getdel(self, key: TEncodable) -> Optional[bytes]:
         """
