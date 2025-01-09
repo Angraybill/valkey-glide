@@ -479,27 +479,40 @@ class CoreCommands(Protocol):
             args.extend(expiry.get_cmd_args())
         return cast(Optional[bytes], await self._execute_command(RequestType.Set, args))
 
-    async def get(self, key: TEncodable, ret_as_byte=True) -> Optional[bytes]:
+    async def get(self, key: TEncodable, ret_as_byte=True) -> Optional[bytes] | Optional[str]: 
         """
-        Get the value associated with the given key, or null if no such value exists.
-        See https://valkey.io/commands/get/ for details.
+        Get the value associated with the given key as bytes or string, or null if no such value exists.
+        See https://valkey.io/commands/get/ for details.*
 
         Args:
             key (TEncodable): The key to retrieve from the database.
-
+            ret_as_byte: True to return as byte. False returns as String
+            
         Returns:
-            Optional[bytes]: If the key exists, returns the value of the key as a byte string. Otherwise, return None.
+            Optional[bytes]: If the key exists and ret_as_byte is False, returns the value of the key as a byte string. 
+            Optional[str]: If the key exists and ret_as_byte is True, returns the value of the key as a string.
+            If the key does not exist, returns None
 
         Example:
+            >>> await client.set("key", "value")
             >>> await client.get("key")
                 b'value'
+            >>> await client.get("key", False)
+                b'value'
+            >>> await client.get("key", True)
+                value
         """
+
         args: List[TEncodable] = [key]
         ret = await self._execute_command(RequestType.Get, args)
+
+        if ret == None:
+            return None
         if ret_as_byte:
             return cast(Optional[bytes], ret)
         else:
-            return str(ret)[2:-1]
+            return cast(Optional[str], str(ret))[2:-1]
+        # takes an average of .05 extra milliseconds to get a string than to get a byte and decode it
 
     async def getdel(self, key: TEncodable) -> Optional[bytes]:
         """
