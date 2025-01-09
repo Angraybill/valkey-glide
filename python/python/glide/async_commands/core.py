@@ -479,7 +479,7 @@ class CoreCommands(Protocol):
             args.extend(expiry.get_cmd_args())
         return cast(Optional[bytes], await self._execute_command(RequestType.Set, args))
 
-    async def get(self, key: TEncodable) -> Optional[bytes]:
+    async def get(self, key: TEncodable, ret_as_byte=True) -> Optional[bytes]:
         """
         Get the value associated with the given key, or null if no such value exists.
         See https://valkey.io/commands/get/ for details.
@@ -495,7 +495,11 @@ class CoreCommands(Protocol):
                 b'value'
         """
         args: List[TEncodable] = [key]
-        return cast(Optional[bytes], await self._execute_command(RequestType.Get, args))
+        ret = await self._execute_command(RequestType.Get, args)
+        if ret_as_byte:
+            return cast(Optional[bytes], ret)
+        else:
+            return str(ret)[2:-1]
 
     async def getdel(self, key: TEncodable) -> Optional[bytes]:
         """
