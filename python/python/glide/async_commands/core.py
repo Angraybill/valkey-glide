@@ -438,7 +438,6 @@ class CoreCommands(Protocol):
         key: TEncodable,
         value: TEncodable,
         conditional_set: Optional[ConditionalChange] = None,
-        provided_value: str = None,
         expiry: Optional[ExpirySet] = None,
         return_old_value: bool = False,
     ) -> Optional[bytes]:
@@ -475,9 +474,11 @@ class CoreCommands(Protocol):
         """
         args = [key, value]
         if conditional_set:
-            args.append(conditional_set.value)
-            if conditional_set.value == "ONLY_IF_EQUAL":
-                if provided_value:
+            args.append(conditional_set[0].value)
+            print(conditional_set, conditional_set[0])
+            print(conditional_set[0].value)
+            if conditional_set[0].value == "ONLY_IF_EQUAL":
+                if provided_value := conditional_set[1]:
                     args.append(provided_value)
                 else:
                     raise ValueError("The 'provided_value' option must be set when using 'ONLY_IF_EQUAL'")
