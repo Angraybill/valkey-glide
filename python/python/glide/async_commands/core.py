@@ -481,6 +481,7 @@ class CoreCommands(Protocol):
                     args.append(provided_value)
                 else:
                     raise ValueError("The 'provided_value' option must be set when using 'ONLY_IF_EQUAL'")
+        
         if return_old_value:
             args.append("GET")
         if expiry is not None:
