@@ -42,6 +42,7 @@ async def create_client(
         client_name="test_cluster_client",
         # Enable this field if the servers are configured with TLS.
         # use_tls=True
+        request_timeout=2000
     )
     return await GlideClusterClient.create(config)
 
