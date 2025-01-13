@@ -73,10 +73,12 @@ class ConditionalChange(Enum):
     A condition to the `SET`, `ZADD` and `GEOADD` commands.
     - ONLY_IF_EXISTS - Only update key / elements that already exist. Equivalent to `XX` in the Valkey API.
     - ONLY_IF_DOES_NOT_EXIST - Only set key / add elements that does not already exist. Equivalent to `NX` in the Valkey API.
+    - ONLY_IF_EQUAL - Only update key if the provided value is equal to the old value. Equivalent to `IFEQ` in the Valkey API.
     """
 
     ONLY_IF_EXISTS = "XX"
     ONLY_IF_DOES_NOT_EXIST = "NX"
+    ONLY_IF_EQUAL = "IFEQ"
 
 
 class ExpiryType(Enum):
@@ -436,6 +438,7 @@ class CoreCommands(Protocol):
         key: TEncodable,
         value: TEncodable,
         conditional_set: Optional[ConditionalChange] = None,
+        provided_value: str = None,
         expiry: Optional[ExpirySet] = None,
         return_old_value: bool = False,
     ) -> Optional[bytes]:
@@ -447,7 +450,7 @@ class CoreCommands(Protocol):
             key (TEncodable): the key to store.
             value (TEncodable): the value to store with the given key.
             conditional_set (Optional[ConditionalChange], optional): set the key only if the given condition is met.
-                Equivalent to [`XX` | `NX`] in the Valkey API. Defaults to None.
+                Equivalent to [`XX` | `NX`, `IFEQ`] in the Valkey API. Defaults to None.
             expiry (Optional[ExpirySet], optional): set expiriation to the given key.
                 Equivalent to [`EX` | `PX` | `EXAT` | `PXAT` | `KEEPTTL`] in the Valkey API. Defaults to None.
             return_old_value (bool, optional): Return the old value stored at key, or None if key did not exist.
@@ -473,6 +476,11 @@ class CoreCommands(Protocol):
         args = [key, value]
         if conditional_set:
             args.append(conditional_set.value)
+            if conditional_set.value == "ONLY_IF_EQUAL":
+                if provided_value:
+                    args.append(provided_value)
+                else:
+                    raise ValueError("The 'provided_value' option must be set when using 'ONLY_IF_EQUAL'")
         if return_old_value:
             args.append("GET")
         if expiry is not None:
