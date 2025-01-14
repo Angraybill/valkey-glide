@@ -438,6 +438,7 @@ class CoreCommands(Protocol):
         key: TEncodable,
         value: TEncodable,
         conditional_set: Optional[ConditionalChange] = None,
+        provided_value: str = None,
         expiry: Optional[ExpirySet] = None,
         return_old_value: bool = False,
     ) -> Optional[bytes]:
@@ -449,7 +450,7 @@ class CoreCommands(Protocol):
             key (TEncodable): the key to store.
             value (TEncodable): the value to store with the given key.
             conditional_set (Optional[ConditionalChange], optional): set the key only if the given condition is met.
-                Equivalent to [`XX` | `NX`, `IFEQ`] in the Valkey API. Defaults to None.
+                Equivalent to [`XX` | `NX` | `IFEQ` comparison-value] in the Valkey API. Defaults to None.
             expiry (Optional[ExpirySet], optional): set expiriation to the given key.
                 Equivalent to [`EX` | `PX` | `EXAT` | `PXAT` | `KEEPTTL`] in the Valkey API. Defaults to None.
             return_old_value (bool, optional): Return the old value stored at key, or None if key did not exist.
@@ -473,16 +474,15 @@ class CoreCommands(Protocol):
                 b'new_value' # Value wasn't modified back to being "value" because of "NX" flag.
         """
         args = [key, value]
+
         if conditional_set:
-            args.append(conditional_set[0].value)
-            print(conditional_set, conditional_set[0])
-            print(conditional_set[0].value)
-            if conditional_set[0].value == "ONLY_IF_EQUAL":
-                if provided_value := conditional_set[1]:
+            args.append(conditional_set.value)
+            if conditional_set.value == ConditionalChange.ONLY_IF_EQUAL.value:
+                if provided_value:
                     args.append(provided_value)
                 else:
                     raise ValueError("The 'provided_value' option must be set when using 'ONLY_IF_EQUAL'")
-        
+
         if return_old_value:
             args.append("GET")
         if expiry is not None:
