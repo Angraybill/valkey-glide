@@ -438,7 +438,7 @@ class CoreCommands(Protocol):
         key: TEncodable,
         value: TEncodable,
         conditional_set: Optional[ConditionalChange] = None,
-        provided_value: str = None,
+        comparison_value: str = None,
         expiry: Optional[ExpirySet] = None,
         return_old_value: bool = False,
     ) -> Optional[bytes]:
@@ -472,16 +472,23 @@ class CoreCommands(Protocol):
                 b'new_value' # Returns the old value of "key".
             >>> await client.get("key")
                 b'new_value' # Value wasn't modified back to being "value" because of "NX" flag.
+
+            >>> await client.set("key", "newest_value", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value="value")
+                'None' # Did not rewrite value because provided value was not equal to the previous value of "key"
+            >>> await client.set("key", "newest_value", conditional_set.ConditionalChange.ONLY_IF_EQUAL, comparison_value="new_value")
+                'OK'
+            >>> await client.get("key")
+                b'newest_value" # Set "key" to "newests_value" because the provided value was equal to the previous value of "key"
         """
         args = [key, value]
 
         if conditional_set:
             args.append(conditional_set.value)
             if conditional_set.value == ConditionalChange.ONLY_IF_EQUAL.value:
-                if provided_value:
-                    args.append(provided_value)
+                if comparison_value:
+                    args.append(comparison_value)
                 else:
-                    raise ValueError("The 'provided_value' option must be set when using 'ONLY_IF_EQUAL'")
+                    raise ValueError("The 'comparison_value' option must be set when using 'ONLY_IF_EQUAL'")
 
         if return_old_value:
             args.append("GET")
