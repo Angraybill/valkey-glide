@@ -482,7 +482,7 @@ class CoreCommands(Protocol):
     async def get(self, key: TEncodable, ret_as_byte=True) -> Optional[bytes] | Optional[str]: 
         """
         Get the value associated with the given key as bytes or string, or null if no such value exists.
-        See https://valkey.io/commands/get/ for details.*
+        See https://valkey.io/commands/get/ for details.**
 
         Args:
             key (TEncodable): The key to retrieve from the database.
