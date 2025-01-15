@@ -453,8 +453,8 @@ class TestCommands:
         key = get_random_string(10)
         value = get_random_string(10)
         value2 = get_random_string(10)
-        comparison_value = get_random_string(10)
-        while comparison_value != value: comparison_value = get_random_string(10)
+        wrong_comparison_value = get_random_string(10)
+        while wrong_comparison_value == value: wrong_comparison_value = get_random_string(10)
 
         res = await glide_client.set(
             key, value, conditional_set=ConditionalChange.ONLY_IF_EXISTS
@@ -471,7 +471,7 @@ class TestCommands:
         assert res is None
         assert await glide_client.get(key) == value.encode()
         res = await glide_client.set(
-            key, "foobar", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=comparison_value
+            key, "foobar", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=wrong_comparison_value
         )
         assert res is None
         assert await glide_client.get == value.encode()
