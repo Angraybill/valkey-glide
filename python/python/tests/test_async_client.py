@@ -474,7 +474,7 @@ class TestCommands:
             key, "foobar", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=wrong_comparison_value
         )
         assert res is None
-        assert await glide_client.get == value.encode()
+        assert await glide_client.get(key) == value.encode()
         res = await glide_client.set(
             key, value2, conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=value
         )
