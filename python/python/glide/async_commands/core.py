@@ -466,19 +466,28 @@ class CoreCommands(Protocol):
         Example:
             >>> await client.set(b"key", b"value")
                 'OK'
+
+                # ONLY_IF_EXISTS -> Only set the key if it already exists
+                # expiry -> Set the amount of time until key expires
             >>> await client.set("key", "new_value",conditional_set=ConditionalChange.ONLY_IF_EXISTS, expiry=Expiry(ExpiryType.SEC, 5))
                 'OK' # Set "new_value" to "key" only if "key" already exists, and set the key expiration to 5 seconds.
+
+                # ONLY_IF_DOES_NOT_EXIST -> Only set key if it does not already exist
             >>> await client.set("key", "value", conditional_set=ConditionalChange.ONLY_IF_DOES_NOT_EXIST,return_old_value=True)
                 b'new_value' # Returns the old value of "key".
             >>> await client.get("key")
                 b'new_value' # Value wasn't modified back to being "value" because of "NX" flag.
 
-            >>> await client.set("key", "newest_value", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value="value")
-                'None' # Did not rewrite value because provided value was not equal to the previous value of "key"
-            >>> await client.set("key", "newest_value", conditional_set.ConditionalChange.ONLY_IF_EQUAL, comparison_value="new_value")
+
+                # ONLY_IF_EQUAL -> Only set key if provided value is equal to current value of the key
+            >>> awaut client.set("key", "value")
+                'OK' # "key" is reset to "value"
+            >>> await client.set("key", "new_value", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value="different_value")
+                'None' # Did not rewrite value of "key" because provided value was not equal to the previous value of "key"
+            >>> await client.set("key", "new_value", conditional_set.ConditionalChange.ONLY_IF_EQUAL, comparison_value="value")
                 'OK'
             >>> await client.get("key")
-                b'newest_value" # Set "key" to "newests_value" because the provided value was equal to the previous value of "key"
+                b'newest_value" # Set "key" to "new_value" because the provided value was equal to the previous value of "key"
         """
         args = [key, value]
 
@@ -488,7 +497,9 @@ class CoreCommands(Protocol):
                 if comparison_value:
                     args.append(comparison_value)
                 else:
-                    raise ValueError("The 'comparison_value' option must be set when using 'ONLY_IF_EQUAL'")
+                    raise ValueError(
+                        "The 'comparison_value' option must be set when using 'ONLY_IF_EQUAL'"
+                    )
 
         if return_old_value:
             args.append("GET")

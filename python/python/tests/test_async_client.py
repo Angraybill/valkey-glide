@@ -452,9 +452,6 @@ class TestCommands:
     async def test_conditional_set(self, glide_client: TGlideClient):
         key = get_random_string(10)
         value = get_random_string(10)
-        value2 = get_random_string(10)
-        wrong_comparison_value = get_random_string(10)
-        while wrong_comparison_value == value: wrong_comparison_value = get_random_string(10)
 
         res = await glide_client.set(
             key, value, conditional_set=ConditionalChange.ONLY_IF_EXISTS
@@ -470,16 +467,30 @@ class TestCommands:
         )
         assert res is None
         assert await glide_client.get(key) == value.encode()
-        res = await glide_client.set(
-            key, "foobar", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=wrong_comparison_value
-        )
-        assert res is None
-        assert await glide_client.get(key) == value.encode()
-        res = await glide_client.set(
-            key, value2, conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=value
-        )
-        assert res == OK
-        assert await glide_client.get(key) == value2.encode()
+        # Tests for ONLY_IF_EQUAL below in test_set_only_if_equal()
+
+    @pytest.mark.parametrize("cluster_mode", [True, False])
+    @pytest.mark.parametrize("protocol", [ProtocolVersion.RESP2, ProtocolVersion.RESP3])
+    async def test_set_only_if_equal(self, glide_client: TGlideClient):
+        if await check_if_server_version_lt(glide_client, "8.1.0"):
+            key = get_random_string(10)
+            value = get_random_string(10)
+            value2 = get_random_string(10)
+            wrong_comparison_value = get_random_string(10)
+            while wrong_comparison_value == value:
+                wrong_comparison_value = get_random_string(10)
+
+ 
+            res = await glide_client.set(
+                key, "foobar", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=wrong_comparison_value,
+            )
+            assert res is None
+            assert await glide_client.get(key) == value.encode()
+            res = await glide_client.set(
+                key, value2, conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value=value,
+            )
+            assert res == OK
+            assert await glide_client.get(key) == value2.encode()
 
     @pytest.mark.parametrize("cluster_mode", [True, False])
     @pytest.mark.parametrize("protocol", [ProtocolVersion.RESP2, ProtocolVersion.RESP3])
