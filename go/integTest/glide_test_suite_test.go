@@ -115,7 +115,7 @@ func extractAddresses(suite *GlideTestSuite, output string) []api.NodeAddress {
 func runClusterManager(suite *GlideTestSuite, args []string, ignoreExitCode bool) string {
 	pythonArgs := append([]string{"../../utils/cluster_manager.py"}, args...)
 	output, err := exec.Command("python3", pythonArgs...).CombinedOutput()
-	if len(output) > 0 {
+	if len(output) > 0 && !ignoreExitCode {
 		suite.T().Logf("cluster_manager.py output:\n====\n%s\n====\n", string(output))
 	}
 
@@ -271,9 +271,9 @@ func (suite *GlideTestSuite) runWithClients(clients []api.BaseClient, test func(
 	}
 }
 
-func (suite *GlideTestSuite) verifyOK(result api.Result[string], err error) {
+func (suite *GlideTestSuite) verifyOK(result string, err error) {
 	assert.Nil(suite.T(), err)
-	assert.Equal(suite.T(), api.OK, result.Value())
+	assert.Equal(suite.T(), api.OK, result)
 }
 
 func (suite *GlideTestSuite) SkipIfServerVersionLowerThanBy(version string) {
