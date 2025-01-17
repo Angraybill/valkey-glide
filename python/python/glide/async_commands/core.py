@@ -73,12 +73,20 @@ class ConditionalChange(Enum):
     A condition to the `SET`, `ZADD` and `GEOADD` commands.
     - ONLY_IF_EXISTS - Only update key / elements that already exist. Equivalent to `XX` in the Valkey API.
     - ONLY_IF_DOES_NOT_EXIST - Only set key / add elements that does not already exist. Equivalent to `NX` in the Valkey API.
-    - ONLY_IF_EQUAL - Only update key if the provided value is equal to the old value. Equivalent to `IFEQ` in the Valkey API.
     """
 
     ONLY_IF_EXISTS = "XX"
     ONLY_IF_DOES_NOT_EXIST = "NX"
-    ONLY_IF_EQUAL = "IFEQ"
+
+@dataclass
+class OnlyIfEqual():
+    """
+    Condition to the `SET` command
+    - comparison_value - value to compare to the current value of a key. 
+    If comparison_value is equal to the key, it will overwrite the value of key to the new provided value
+    Equivalent to the IFEQ comparison-value in the Valkey API 
+    """
+    comparison_value: TEncodable
 
 
 class ExpiryType(Enum):
@@ -437,8 +445,7 @@ class CoreCommands(Protocol):
         self,
         key: TEncodable,
         value: TEncodable,
-        conditional_set: Optional[ConditionalChange] = None,
-        comparison_value: str = None,
+        conditional_set: Optional[Union[ConditionalChange, OnlyIfEqual]] = None,
         expiry: Optional[ExpirySet] = None,
         return_old_value: bool = False,
     ) -> Optional[bytes]:
@@ -480,26 +487,27 @@ class CoreCommands(Protocol):
 
 
                 # ONLY_IF_EQUAL -> Only set key if provided value is equal to current value of the key
-            >>> awaut client.set("key", "value")
-                'OK' # "key" is reset to "value"
-            >>> await client.set("key", "new_value", conditional_set=ConditionalChange.ONLY_IF_EQUAL, comparison_value="different_value")
+            >>> await client.set("key", "value")
+                'OK' # Reset "key" to "value"
+            >>> await client.set("key", "new_value", conditional_set=OnlyIfEqual("different_value")
                 'None' # Did not rewrite value of "key" because provided value was not equal to the previous value of "key"
-            >>> await client.set("key", "new_value", conditional_set.ConditionalChange.ONLY_IF_EQUAL, comparison_value="value")
+            >>> await client.get("key")
+                b'value' # Still the original value because nothing got rewritten in the last call
+            >>> await client.set("key", "new_value", conditional_set=OnlyIfEqual("value")
                 'OK'
             >>> await client.get("key")
                 b'newest_value" # Set "key" to "new_value" because the provided value was equal to the previous value of "key"
         """
         args = [key, value]
-
-        if conditional_set:
+        if isinstance(conditional_set, ConditionalChange):
             args.append(conditional_set.value)
-            if conditional_set.value == ConditionalChange.ONLY_IF_EQUAL.value:
-                if comparison_value:
-                    args.append(comparison_value)
-                else:
-                    raise ValueError(
-                        "The 'comparison_value' option must be set when using 'ONLY_IF_EQUAL'"
-                    )
+
+        elif isinstance(conditional_set, OnlyIfEqual):
+            args.append("IFEQ")
+            if conditional_set.comparison_value:
+                args.append(conditional_set.comparison_value)
+            else:
+                raise ValueError("'comparison_value' must be set when using 'OnlyIfEqual'")
 
         if return_old_value:
             args.append("GET")
