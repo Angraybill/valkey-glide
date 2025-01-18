@@ -477,7 +477,7 @@ class CoreCommands(Protocol):
 
                 # ONLY_IF_EXISTS -> Only set the key if it already exists
                 # expiry -> Set the amount of time until key expires
-            >>> await client.set("key", "new_value",conditional_set=ConditionalChange.ONLY_IF_EXISTS, expiry=Expiry(ExpiryType.SEC, 5))
+            >>> await client.set("key", "new_value",conditional_set=ConditionalChange.ONLY_IF_EXISTS, expiry=ExpirySet(ExpiryType.SEC, 5))
                 'OK' # Set "new_value" to "key" only if "key" already exists, and set the key expiration to 5 seconds.
 
                 # ONLY_IF_DOES_NOT_EXIST -> Only set key if it does not already exist
