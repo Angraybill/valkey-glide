@@ -81,7 +81,8 @@ class ConditionalChange(Enum):
 @dataclass
 class OnlyIfEqual():
     """
-    Condition to the `SET` command
+    Change condition to the `SET` command,
+    For additional conditonal options see ConditionalChange
     - comparison_value - value to compare to the current value of a key. 
     If comparison_value is equal to the key, it will overwrite the value of key to the new provided value
     Equivalent to the IFEQ comparison-value in the Valkey API 
@@ -503,11 +504,7 @@ class CoreCommands(Protocol):
             args.append(conditional_set.value)
 
         elif isinstance(conditional_set, OnlyIfEqual):
-            args.append("IFEQ")
-            if conditional_set.comparison_value:
-                args.append(conditional_set.comparison_value)
-            else:
-                raise ValueError("'comparison_value' must be set when using 'OnlyIfEqual'")
+            args.extend(["IFEQ", conditional_set.comparison_value])
 
         if return_old_value:
             args.append("GET")

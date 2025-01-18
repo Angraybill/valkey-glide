@@ -20,6 +20,7 @@ from glide.async_commands.bitmap import (
 from glide.async_commands.command_args import Limit, ListDirection, ObjectType, OrderBy
 from glide.async_commands.core import (
     ConditionalChange,
+    OnlyIfEqual,
     CoreCommands,
     ExpireOptions,
     ExpiryGetEx,
