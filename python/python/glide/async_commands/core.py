@@ -78,15 +78,17 @@ class ConditionalChange(Enum):
     ONLY_IF_EXISTS = "XX"
     ONLY_IF_DOES_NOT_EXIST = "NX"
 
+
 @dataclass
-class OnlyIfEqual():
+class OnlyIfEqual:
     """
     Change condition to the `SET` command,
     For additional conditonal options see ConditionalChange
-    - comparison_value - value to compare to the current value of a key. 
+    - comparison_value - value to compare to the current value of a key.
     If comparison_value is equal to the key, it will overwrite the value of key to the new provided value
-    Equivalent to the IFEQ comparison-value in the Valkey API 
+    Equivalent to the IFEQ comparison-value in the Valkey API
     """
+
     comparison_value: TEncodable
 
 

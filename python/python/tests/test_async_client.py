@@ -29,7 +29,6 @@ from glide.async_commands.bitmap import (
 from glide.async_commands.command_args import Limit, ListDirection, OrderBy
 from glide.async_commands.core import (
     ConditionalChange,
-    OnlyIfEqual,
     ExpireOptions,
     ExpiryGetEx,
     ExpirySet,
@@ -40,6 +39,7 @@ from glide.async_commands.core import (
     InfBound,
     InfoSection,
     InsertPosition,
+    OnlyIfEqual,
     UpdateOptions,
 )
 from glide.async_commands.sorted_set import (
@@ -484,12 +484,16 @@ class TestCommands:
         await glide_client.set(key, value)
 
         res = await glide_client.set(
-            key, "foobar", conditional_set=OnlyIfEqual(wrong_comparison_value),
+            key,
+            "foobar",
+            conditional_set=OnlyIfEqual(wrong_comparison_value),
         )
         assert res is None
         assert await glide_client.get(key) == value.encode()
         res = await glide_client.set(
-            key, value2, conditional_set=OnlyIfEqual(value),
+            key,
+            value2,
+            conditional_set=OnlyIfEqual(value),
         )
         assert res == OK
         assert await glide_client.get(key) == value2.encode()
